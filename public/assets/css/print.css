@@ -1,0 +1,53 @@
+@page {
+    margin: 16mm;
+}
+
+body {
+    background: #fff;
+    font-size: 11pt;
+}
+
+.site-header,
+.site-footer,
+.skip-link,
+.stepper,
+.receipt-actions,
+.btn-copy,
+#toastHost {
+    display: none;
+}
+
+main {
+    padding: 0;
+}
+
+.card,
+.receipt {
+    border: 1px solid #999;
+    box-shadow: none;
+    max-width: 100%;
+}
+
+.receipt-top {
+    background: #fff;
+}
+
+.ri-circle,
+.ri-mark {
+    stroke-dashoffset: 0;
+    animation: none;
+}
+
+.result-icon {
+    animation: none;
+}
+
+.receipt::before {
+    content: 'Payment receipt';
+    display: block;
+    padding: 12px 24px;
+    border-bottom: 1px solid #999;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}

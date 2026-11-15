@@ -1,0 +1,152 @@
+{
+  "request_id": "6af8789870e23",
+  "timestamp": "2026-11-14 18:04:56",
+  "status": 1,
+  "status_code": "GATEE_100",
+  "message": "",
+  "data": {
+    "payment": {
+      "status": "unpaid",
+      "id": "10117946686500001",
+      "code": "BAB-20261114-LKN3J7",
+      "url": "0w5v66826f64971",
+      "type": "pay",
+      "note": null,
+      "description": null,
+      "currency": "BHD",
+      "amount": "385.000",
+      "amount_paid": "0.000",
+      "amount_remaining": "385.000",
+      "amount_subtotal": "385.000",
+      "amount_vat": "0.000",
+      "amount_discount": "0.000",
+      "vat_rate": "0.000",
+      "vat_fixed": "0.000",
+      "discount_rate": "0.000",
+      "discount_fixed": "0.000",
+      "tin": null,
+      "created": null,
+      "expiry": null,
+      "due": null,
+      "reference": null,
+      "field1": null,
+      "field2": null,
+      "field3": null,
+      "field4": null,
+      "field5": null,
+      "data": [],
+      "branch": {
+        "id": "10117188663338560"
+      },
+      "client": {
+        "code": null,
+        "name": "hussain ali",
+        "email": "customer@example.com",
+        "mobile_code": "973",
+        "mobile": "36570015",
+        "identity_number": null,
+        "entity_name": null,
+        "billing": {
+          "country": "BH",
+          "city": null,
+          "address": null
+        }
+      },
+      "settings": {
+        "callback_url": "https://example.com/webhook/gate-e.php",
+        "redirect_url": "https://example.com/callback.php"
+      },
+      "to": null,
+      "to_id": null
+    },
+    "payment_details": [
+      {
+        "id": "10117687601560717",
+        "code": null,
+        "amount_subtotal": "350.000",
+        "amount_unit": "350.000",
+        "amount_total": "350.000",
+        "amount_vat": "0.000",
+        "vat_rate": "0.000",
+        "quantity": "1",
+        "name": "Website Starter Package",
+        "note": null
+      },
+      {
+        "id": "10117687601560720",
+        "code": null,
+        "amount_subtotal": "35.000",
+        "amount_unit": "35.000",
+        "amount_total": "35.000",
+        "amount_vat": "0.000",
+        "vat_rate": "0.000",
+        "quantity": "1",
+        "name": "VAT 10%",
+        "note": null
+      }
+    ],
+    "transaction": [
+      {
+        "id": "10117946686870002",
+        "code": "10117946686510002_FAIL6af8788fecd64_failed",
+        "type": "pay",
+        "parent_transaction_id": null,
+        "reference_number": "FAIL6af8788fecd64",
+        "status": "failed",
+        "paid_amount": 0,
+        "paid_currency": "BHD",
+        "mode": "test",
+        "amount": 385,
+        "currency": "BHD",
+        "response_code": "400",
+        "response_message": "Invalid CVV",
+        "card": {
+          "first_digits": null,
+          "last_digits": null,
+          "type": "VIRTUAL",
+          "brand": null
+        },
+        "rrn": null,
+        "authorization_code": null,
+        "payment_date": "2026-11-14 18:04:47",
+        "3ds_type": null,
+        "3ds_status": null,
+        "eci": null,
+        "risk_score": null,
+        "merchant_id": "100269787",
+        "note": null,
+        "gateway": {
+          "id": "10117701907931638",
+          "entity_id": "10117188663331874",
+          "branch_id": "10117188663338560",
+          "code": "gatee",
+          "mode": "test",
+          "name_en": "TEST Gateway",
+          "name_ar": "????? ???????",
+          "merhcnat_id": null,
+          "terminal_id": null,
+          "currency": "BHD",
+          "allowed_currency": null,
+          "logo": "gate-e",
+          "logo_url": "https://file.gate-e.net/gateway/svg/gate-e.svg",
+          "logo_list": null,
+          "logo_supported": null,
+          "logo_square": "gate-e",
+          "logo_wide": "gate-e",
+          "icon": null,
+          "location": "list",
+          "priority": null,
+          "active": "1",
+          "date_added": "2026-02-04 10:39:53",
+          "date_updated": "2026-02-10 08:39:53"
+        }
+      }
+    ]
+  },
+  "info": {
+    "powered_by": "Gate-E.com",
+    "api_version": "01",
+    "node": "101"
+  },
+  "timezone": "Asia/Bahrain"
+}

@@ -1,4 +1,19 @@
+# Secrets and local config
 .env
+
+# Dependencies
 vendor/
+
+# Runtime logs
 storage/logs/*
 !storage/logs/.gitkeep
+
+# JVM crash dumps (Gradle / Flutter tooling)
+hs_err_pid*.log
+replay_pid*.log
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
