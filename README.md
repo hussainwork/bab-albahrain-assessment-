@@ -4,6 +4,26 @@ A small shop where a customer picks a product, fills in their details and pays b
 
 ![Checkout](docs/screenshots/01-checkout.png)
 
+## Quick start
+
+```bash
+composer install
+cp .env.example .env     # add the Gate-E credentials from the brief and your DB login
+mysql -uroot < database/schema.sql
+mysql -uroot < database/seed.sql
+php -S localhost:8000 -t public
+```
+
+Open <http://localhost:8000>, pay with card `1111 2222 3333 4444`, expiry `12/30`, CVV `123` (success) or `999` (failure). Full setup, including the webhook tunnel, is further down.
+
+| Page | URL | What you see |
+|---|---|---|
+| Checkout | `/` | Product form; the payment page opens in an iframe |
+| Receipt | `/callback.php` | Result after paying (reached by the gateway redirect) |
+| Payments | `/payments.php` | All payments, filters, **View** modal with DB vs live Gate-E data |
+| API logs | `/logs.php` | Every request to Gate-E and every webhook |
+| Arabic | `/?lang=ar` | Same pages in Arabic (RTL) |
+
 ## Requirements coverage
 
 | # | Task from the brief | Where it lives | Screenshot |
@@ -106,8 +126,6 @@ Put the printed `https://...` address in `APP_URL`, restart the PHP server, and 
 
 Test card: `1111 2222 3333 4444`, expiry `12/30` (CVV results are listed under *How to use it*).
 
-Pages: `/` checkout, `/payments.php` listing, `/logs.php` API logs. Add `?lang=ar` for Arabic.
-
 ## How to use it
 
 1. Open the checkout (`/`), choose a product and quantity, then enter name, email and a Bahraini mobile number (8 digits starting 1, 3 or 6).
@@ -137,63 +155,4 @@ Pages: `/` checkout, `/payments.php` listing, `/logs.php` API logs. Add `?lang=a
 
 Database tables: [customers](docs/screenshots/db-1-customers.png), [payments](docs/screenshots/db-2-payments.png), [transactions](docs/screenshots/db-3-transactions.png), [api_logs](docs/screenshots/db-4-api-logs.png).
 
-## Payment flow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant B as Browser
-    participant P as My PHP
-    participant D as MySQL
-    participant G as Gate-E
-
-    B->>P: POST /api/create-payment.php (AJAX, CSRF token)
-    P->>P: validate, rate limit, price from DB
-    P->>D: insert customer + payment (initiated)
-    P->>G: payment/create
-    G-->>P: payment id + link
-    P->>D: attach gateway id, status pending
-    P-->>B: JSON { payment_url }
-    B->>G: iframe loads payment_url
-    Note over B,G: customer pays inside the iframe
-    G-->>P: POST /webhook/gate-e.php (code_id)
-    P->>G: payment/get (verify)
-    P->>D: lock row, upsert transaction, update status
-    P-->>G: 200 + code_id
-    G-->>B: redirect to /callback.php?payment_id&payment_code
-    B->>P: GET /callback.php (breaks out of the iframe)
-    P->>G: payment/get (verify again)
-    P->>D: sync is a no-op if the webhook already ran
-    P-->>B: receipt page
-```
-
-## Key engineering decisions
-
-- **Never trust the browser for money.** The price is read from `products` by id and the VAT is computed on the server. A tampered `price` field in the request is ignored; I tested it.
-- **Verify, don't believe.** The redirect query string and the webhook body only tell me which payment to look at. The status always comes from `payment/get`. A payment is marked paid only if the gateway amount equals the order amount.
-- **Idempotency by construction.** Each sync fetches from Gate-E first, then opens a DB transaction and locks the payment row with `SELECT ... FOR UPDATE`. Transactions have a unique `(payment_id, fingerprint)` key, so replaying the same data upserts the same row.
-- **One sync service.** There is exactly one code path that turns a gateway response into database state, so the callback, webhook and manual refresh cannot disagree.
-- **State machine, with one deliberate widening.** `failed` and `cancelled` may still move to `paid`. The gateway page lets a customer retry on the same payment, and a payment cancelled on my side could still be completed at Gate-E, where the verified gateway status is the truth. `paid` is final.
-- **Thin endpoints.** Each endpoint validates, calls a service and returns `{ success, data, message, errors }`.
-- **Network versus business errors.** cURL has connect and read timeouts and retries once, only on network failures. A business error from Gate-E is never retried. Users see a clean message and the log gets the detail.
-
-## Security measures
-
-- CSRF token on every state-changing request (the webhook is server-to-server and is verified through `payment/get` instead).
-- Prepared statements only; `htmlspecialchars` on every output; JSON written into the page is escaped with `JSON_HEX_*`.
-- Server-side validation: email, Bahraini mobile (8 digits starting 1, 3 or 6), quantity range, active product.
-- Session rate limit on create-payment (10 attempts per 5 minutes).
-- Headers: `Content-Security-Policy` (scripts and styles limited to self plus the CDN, `frame-src` allows `*.gate-e.net`), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`; session cookie is `HttpOnly` and `SameSite=Lax`.
-- Secrets only in `.env`; the API key is masked in `api_logs` and in the application log.
-- Cancel is limited to payments created in the same browser session; the retry link is HMAC-signed.
-
-## Known limitations and what I would do next in production
-
-- **The real webhook differs from the brief.** The delivery has no top-level `code_id`; the payment is under `data.payment` (`id` and `code`), alongside a `callback_key`. The endpoint reads the payment from there, still accepts `code_id`, and echoes the identifier it received. I could not confirm what Gate-E expects in the reply beyond HTTP 200, so that part is the one thing I would check with their support. The body is never trusted anyway: the status comes from `payment/get`.
-- **Gate-E response fields.** `StatusMapper` and the transaction mapping were checked against real paid and failed test-card responses (`docs/api-samples/`). Only the test gateway was available, so other card brands and 3-D Secure fields are untested.
-- **Notification settings.** The brief mentions turning notification sending off, but the field name is not in the sample I had, so I did not guess it.
-- **No authentication on `/payments.php` and `/logs.php`.** Acceptable for an assessment; in production they sit behind an admin login with roles.
-- **Webhooks are processed inline.** In production I would acknowledge immediately, push the job to a queue and process it with retries.
-- **Reconciliation.** A cron job that re-syncs payments stuck in `pending` after N minutes, plus alerting on mismatches between my database and Gate-E.
-- **Monitoring.** Structured logs shipped to a central place, alerts on gateway error rate and latency.
-- **Tests.** The sync service already depends on a `GatewayApi` interface so it can be tested with a fake gateway; I would add a proper PHPUnit suite and a CI job.
+A sequence diagram of the payment flow is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
